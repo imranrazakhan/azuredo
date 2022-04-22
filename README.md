@@ -23,10 +23,12 @@ There are few prerequisites needed to be done, before proceeding for coding
       ```
       
     - Export the following environment variables:
+        ```
         export ARM_CLIENT_ID=<insert the appId from above>
         export ARM_SUBSCRIPTION_ID=<insert your subscription id>
         export ARM_TENANT_ID=<insert the tenant from above>
         export ARM_CLIENT_SECRET=<insert the password from above>
+        ```
     - 
 
 
