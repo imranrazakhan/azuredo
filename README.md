@@ -5,12 +5,12 @@ There are few prerequisites needed to be done, before proceeding for coding
 - Install Azure CLI
 - Install Terraform
 - Terraform uses a different set of credentials to provision the infrastructure, so you should create those first.
-  - az login
+  - ```az login```
   - Terraform needs a Service Principal to create resources on your behalf.
     - You will first need to get your subscription ID. (Make a note of your subscription id.)
-      - az account list |  grep -oP '(?<="id": ")[^"]*'
+      - ```az account list |  grep -oP '(?<="id": ")[^"]*'```
     - You can create the Service Principal with:
-      - az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/SUBSCRIPTION_ID" 
+      - ```az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/SUBSCRIPTION_ID" ```
     - The previous command should print a JSON payload like this:
       ```
       {
@@ -29,7 +29,10 @@ There are few prerequisites needed to be done, before proceeding for coding
         export ARM_TENANT_ID=<insert the tenant from above>
         export ARM_CLIENT_SECRET=<insert the password from above>
         ```
-    - 
+ - Create directory like aks-cluster, copy terraform code in it.
+ -  ```terraform init```
+ -  ```terraform plan```
+ -  ```terraform apply```
 
 
 
