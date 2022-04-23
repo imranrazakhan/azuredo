@@ -33,4 +33,3 @@ There are few prerequisites needed to be done, before proceeding for coding
 
 
 
-You will first need to get your subscription ID.
