@@ -1,22 +1,3 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 2.49.0"
-    }
-  }
-  backend "azurerm" {
-      resource_group_name  = "tfstate-rg-dev"
-      storage_account_name = "<storage_acct_name>"
-      container_name       = "tfstate"
-      key                  = "terraform.tfstate"
-  }
-}
-
-provider "azurerm" {
-  features {}
-  subscription_id = "ikk***********823"
-}
 
 resource "azurerm_resource_group" "rg" {
   name     = "imranrg-${var.env_name}"
