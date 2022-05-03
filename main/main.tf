@@ -5,6 +5,12 @@ terraform {
       version = "~> 2.49.0"
     }
   }
+  backend "azurerm" {
+      resource_group_name  = "tfstate-rg-dev"
+      storage_account_name = "<storage_acct_name>"
+      container_name       = "tfstate"
+      key                  = "terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
@@ -20,6 +26,14 @@ resource "azurerm_resource_group" "rg" {
          "Team"        = "DevOps"
         }
 
+}
+
+resource "azurerm_container_registry" "acr" {
+  name                = "acr${var.env_name}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  sku                 = "Basic"
+  admin_enabled       = false
 }
 
 resource "azurerm_kubernetes_cluster" "cluster" {
