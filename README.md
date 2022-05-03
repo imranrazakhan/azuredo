@@ -37,11 +37,12 @@ There are few prerequisites needed to be done, before proceeding for coding
      - Terraform state can include sensitive information.
      - Storing state locally increases the chance of inadvertent deletion.
      - we are not using Terraform to create the storage account.  Terraform could be used, it will work the same.  The remote state is stateful, meaning the data needs to persist through the lifecycle of the code.  We can’t simply delete and recreate the storage account without removing the state file.  Because of that, this example uses the Azure CLI.
-       - Run commands from file storage.azcli 
+       - Run commands from file ```storage.azcli``` 
+       
  - Create directory like aks-cluster, copy terraform code in it.
- -  ```terraform init```
- -  ```terraform plan```
- -  ```terraform apply```
+   -  ```terraform init```
+   -  ```terraform plan```
+   -  ```terraform apply```
 
 
 
