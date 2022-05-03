@@ -7,7 +7,7 @@ There are few prerequisites needed to be done, before proceeding for coding
 - Terraform uses a different set of credentials to provision the infrastructure, so you should create those first.
   - ```az login```
   - In case you’d like to work with multiple subscriptions, you can set a specific subscription - which will receive the Terraform commands - by using following Azure CLI command:
-    -   az account set --subscription "<your subscription id>"
+    -   ```az account set --subscription "<your subscription id>"```
   - Terraform needs a Service Principal to create resources on your behalf.
     - You will first need to get your subscription ID. (Make a note of your subscription id.)
       - ```az account list |  grep -oP '(?<="id": ")[^"]*'```
