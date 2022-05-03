@@ -31,6 +31,13 @@ There are few prerequisites needed to be done, before proceeding for coding
         export ARM_TENANT_ID=<insert the tenant from above>
         export ARM_CLIENT_SECRET=<insert the password from above>
         ```
+ - Create the Storage Account to save terraform state
+   - Terraform state is used to reconcile deployed resources with Terraform configurations. State allows Terraform to know what Azure resources to add, update, or delete.By default, Terraform state is stored locally, which isn't ideal for the following reasons:
+     - Local state doesn't work well in a team or collaborative environment.
+     - Terraform state can include sensitive information.
+     - Storing state locally increases the chance of inadvertent deletion.
+     - we are not using Terraform to create the storage account.  Terraform could be used, it will work the same.  The remote state is stateful, meaning the data needs to persist through the lifecycle of the code.  We can’t simply delete and recreate the storage account without removing the state file.  Because of that, this example uses the Azure CLI.
+       - Run commands from file storage.azcli 
  - Create directory like aks-cluster, copy terraform code in it.
  -  ```terraform init```
  -  ```terraform plan```
