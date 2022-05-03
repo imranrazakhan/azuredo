@@ -1,7 +1,8 @@
+# Azure Storage blobs are automatically locked before any operation that writes state. This pattern prevents concurrent state operations, which can cause corruption.
 
-$RESOURCE_GROUP_NAME='tfstateRG01'
-$STORAGE_ACCOUNT_NAME="tfstate01$(get-random)"
-$CONTAINER_NAME='tfstate'
+RESOURCE_GROUP_NAME=tfstateRG-dev
+STORAGE_ACCOUNT_NAME=tfstate01$RANDOM-dev
+CONTAINER_NAME=tfstate
 
 # Create resource group
 az group create --name $RESOURCE_GROUP_NAME --location eastus
@@ -13,5 +14,8 @@ az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_
 az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME
 
 #Get the storage access key and store it as an environment variable
-$ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv) 
-$env:ARM_ACCESS_KEY=$ACCOUNT_KEY
+ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv) 
+export ARM_ACCESS_KEY=$ACCOUNT_KEY
+
+#To further protect the Azure Storage account access key, store it in Azure Key Vault. 
+export ARM_ACCESS_KEY=$(az keyvault secret show --name terraform-backend-key --vault-name myKeyVault --query value -o tsv)
