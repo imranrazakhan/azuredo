@@ -42,7 +42,13 @@ There are few prerequisites needed to be done, before proceeding for coding
  - Create directory like aks-cluster, copy terraform code in it.
    -  ```terraform init```
    -  ```terraform plan```
-   -  ```terraform apply -var-file=dev.tfvars```
+   -  ```terraform apply```
+   -  Multiple Enviornments (dev, qa, prod)
+      - Workspace-separated environments use the same Terraform code but have different state files, which is useful if you want your environments to stay as similar to each other as possible, for example if you are providing development infrastructure to a team that wants to simulate running in production. 
+           -  ```terraform workspace new dev```
+           -  ```terraform init```
+           -  ```terraform plan -var-file=dev.tfvars```
+           -  ```terraform apply -var-file=dev.tfvars```  
 
 
 
