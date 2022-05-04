@@ -42,7 +42,7 @@ There are few prerequisites needed to be done, before proceeding for coding
  - Create directory like aks-cluster, copy terraform code in it.
    -  ```terraform init```
    -  ```terraform plan```
-   -  ```terraform apply```
+   -  ```terraform apply -var-file=dev.tfvars```
 
 
 
