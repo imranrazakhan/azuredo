@@ -1,0 +1,39 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            env: dev
+        spec:
+          containers:
+          - name: k8s
+            image: alpine/k8s:1.21.5
+            command:
+            - cat
+            tty: true
+        '''
+        }
+    }
+    stages {
+
+        stage ('K8S Deploy') {
+            steps {
+                container('k8s') {
+                    script {
+
+                        withKubeConfig([credentialsId: "aks-test",namespace: "default"])
+                        {
+                            sh """
+                               kubectl apply -f nginx-deployment.yaml
+                            """
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+}
