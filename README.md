@@ -51,4 +51,7 @@ There are few prerequisites needed to be done, before proceeding for coding
            -  ```terraform apply -var-file=dev.tfvars```  
 
 
+# Getting started with Pulumi and Kubernetes on Azure AKS
+winget install --id Pulumi.Pulumi -e
+
 
