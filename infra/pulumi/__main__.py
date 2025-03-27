@@ -85,7 +85,8 @@ argocd_helm = helm.v3.Release(
         repository_opts=helm.v3.RepositoryOptsArgs(
             repo="https://argoproj.github.io/argo-helm",  # The repository URL for ArgoCD's Helm chart
         ),
-        namespace="argocd",  # The namespace to install ArgoCD
+        namespace="argocd",
+        create_namespace=True,
         value_yaml_files=[pulumi.FileAsset("./argocd_values.yaml")],
     ),
     opts=pulumi.ResourceOptions(provider=k8s_provider),
