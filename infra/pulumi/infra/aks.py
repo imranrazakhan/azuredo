@@ -1,6 +1,5 @@
 import pulumi
 from pulumi_azure_native import resources, containerservice
-import base64
 
 class AKSCluster:
 
@@ -43,11 +42,3 @@ class AKSCluster:
             },
             tags=config["tags"]
         )
-
-
-    @property
-    def kube_config_raw(self):
-        creds = containerservice.list_managed_cluster_user_credentials_output(
-            resource_group_name=self.config["resource_group_name"], resource_name=self.cluster.name
-        )
-        return creds.kubeconfigs[0].value.apply(lambda enc: base64.b64decode(enc).decode())

@@ -1,9 +1,10 @@
 import pulumi
-from pulumi_azure_native import resources, containerregistry, authorization
+from pulumi_azure_native import resources, containerregistry, authorization, containerservice
 from infra.aks import AKSCluster
 from pulumi_kubernetes import Provider, helm
-#from pulumi_kubernetes.helm.v3 as helm
+#import pulumi_kubernetes.helm.v3 as helm
 import os
+import base64
 
 # Load Configurations
 config = pulumi.Config()
@@ -64,16 +65,17 @@ acr_pull_role_assignment = authorization.RoleAssignment(
     principal_type="ServicePrincipal",
 )
 
+# Get AKS Cluster credentials
+creds = containerservice.list_managed_cluster_user_credentials_output(
+    resource_group_name=resource_group, resource_name=aks_config["aks_cluster_name"]
+)
 
 
 # Configure Kubernetes Provider using the AKS Kubeconfig
 k8s_provider = Provider(
     "k8s-provider",
-    kubeconfig=aks_cluster.kube_config_raw,  # Use the kubeconfig from AKS
+    kubeconfig=creds.kubeconfigs[0].value.apply(lambda enc: base64.b64decode(enc).decode()),
 )
-
-# Read the values.yaml file
-values_file_path = os.path.join(os.path.dirname(__file__), "argocd_values.yaml")
 
 
 # Deploy ArgoCD using Helm with the values.yaml file
