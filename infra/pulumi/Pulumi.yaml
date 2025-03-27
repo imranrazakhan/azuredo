@@ -1,11 +1,7 @@
-name: pulumi-aks
-description: A minimal Azure Native Python Pulumi program
+name: pulumi-azure-infra
 runtime:
   name: python
   options:
     toolchain: pip
     virtualenv: venv
-config:
-  pulumi:tags:
-    value:
-      pulumi:template: azure-python
+description: Python Pulumi program for Azure Infra deployment

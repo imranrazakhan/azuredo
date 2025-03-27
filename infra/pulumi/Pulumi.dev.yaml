@@ -1,2 +1,14 @@
 config:
-  azure-native:location: WestUS2
+    azure-native:
+      location: "Central US"
+    aks_cluster_name: dev-aks-cluster
+    dns_prefix: doc-dev
+    kubernetes_version: 1.30.9
+    node_count: "1"
+    resource_group_name: dev-resource-group
+    tags:
+      environment: dev
+      project: Pulumi AKS
+    vm_size: Standard_F4s_v2
+    subscription_id: 3344eede-ba3a-4d5c-86b4-98cf0e4454f0
+

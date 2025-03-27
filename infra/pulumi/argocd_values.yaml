@@ -1,0 +1,15 @@
+# argocd_values.yaml
+
+server:
+  ingress:
+    enabled: true
+    hosts:
+      - "argocd.example.com"  # Set your domain or host here
+
+controller:
+  replicaCount: 1
+
+dex:
+  enabled: false  # Disable dex if not needed
+
+# Additional configurations can go here as per your requirements

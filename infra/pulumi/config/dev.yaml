@@ -1,7 +1,0 @@
-config:
-  pulumi:stack: dev
-  resource_group_name: pulumi-aks-rg-dev
-  cluster_name: pulumi-aks-dev
-  location: East US
-  node_count: 2
-  vm_size: Standard_D2_v2
