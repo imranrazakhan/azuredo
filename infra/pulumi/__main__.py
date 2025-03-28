@@ -2,6 +2,7 @@ import pulumi
 from pulumi_azure_native import resources, containerregistry, authorization, containerservice
 from infra.aks import AKSCluster
 from pulumi_kubernetes import Provider, helm
+from pulumi_kubernetes.core.v1 import Namespace, Secret
 #import pulumi_kubernetes.helm.v3 as helm
 import os
 import base64
@@ -67,7 +68,9 @@ acr_pull_role_assignment = authorization.RoleAssignment(
 
 # Get AKS Cluster credentials
 creds = containerservice.list_managed_cluster_user_credentials_output(
-    resource_group_name=resource_group, resource_name=aks_config["aks_cluster_name"]
+    resource_group_name=resource_group.name,
+    resource_name=aks_cluster.cluster.name,
+    #opts=pulumi.ResourceOptions(depends_on=[aks_cluster.cluster])
 )
 
 
@@ -78,7 +81,7 @@ k8s_provider = Provider(
 )
 
 
-# Deploy ArgoCD using Helm with the values.yaml file
+# Deploy ArgoCD using Helm with the argocd_values.yaml file
 argocd_helm = helm.v3.Release(
     "argocd-helm",
     helm.v3.ReleaseArgs(
@@ -90,6 +93,50 @@ argocd_helm = helm.v3.Release(
         namespace="argocd",
         create_namespace=True,
         value_yaml_files=[pulumi.FileAsset("./argocd_values.yaml")],
+    ),
+    opts=pulumi.ResourceOptions(provider=k8s_provider),
+)
+
+# Fetch the password from environment variables
+encoded_url = base64.b64encode( "https://github.com/imranrazakhan/DevOps-Challenge".encode()).decode()
+github_username = base64.b64encode( "imranrazakhan".encode()).decode()
+github_pat = base64.b64encode( os.environ.get("github_pat").encode()).decode()
+
+argocd_repo_secret = Secret(
+ "argocd-repo-doc-github",
+ metadata={
+     "namespace": "argocd",
+     "name": "argocd-repo-doc-github",
+     "labels": {
+            "argocd.argoproj.io/secret-type": "repository"
+     }
+ },
+ data={
+    "url": encoded_url,
+    "username": github_username,
+    "password": github_pat,
+ },
+ opts=pulumi.ResourceOptions(provider=k8s_provider)
+)
+
+monitoring_namespace = Namespace(
+ "monitoring-namespace",
+ metadata={ "name": "monitoring"},
+ opts=pulumi.ResourceOptions(provider=k8s_provider)
+)
+
+# Deploy Kafka Strimzi using Helm with the kafka_Strimzi_values.yaml file
+strimzi_cluster_operator_helm = helm.v3.Release(
+    "strimzi-cluster-operator",
+    helm.v3.ReleaseArgs(
+        chart="strimzi-kafka-operator",
+        version="0.45.0",
+        repository_opts=helm.v3.RepositoryOptsArgs(
+            repo="https://strimzi.io/charts/",  # The repository URL for ArgoCD's Helm chart
+        ),
+        namespace="kafka",
+        create_namespace=True,
+        value_yaml_files=[pulumi.FileAsset("./kafka_strimzi_values.yaml")],
     ),
     opts=pulumi.ResourceOptions(provider=k8s_provider),
 )

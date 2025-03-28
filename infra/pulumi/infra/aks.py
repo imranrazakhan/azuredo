@@ -11,7 +11,7 @@ class AKSCluster:
 
         # Create AKS Cluster
         self.cluster = containerservice.ManagedCluster(
-            self.name,
+            "dev-aks-cluster",
             resource_group_name=resource_group_name,
             location=config["location"],
             dns_prefix=config["dns_prefix"],
