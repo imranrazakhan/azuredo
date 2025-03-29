@@ -51,29 +51,45 @@ spec:
           image: python:3.9
           env:
             - name: POSTGRES_HOST
-              value: "your-postgres-service"
-            - name: POSTGRES_USER
-              value: "youruser"
-            - name: POSTGRES_PASSWORD
-              value: "yourpassword"
+              value: "<your-db-name>.postgres.database.azure.com"
             - name: POSTGRES_DB
               value: "yourdatabase"
+            - name: AZURE_CLIENT_ID
+              value: "<IDENTITY_ID>"  # AKS Managed Identity Client ID
           command: [python, -c]
           args:
             - |
+              import os
               import psycopg2
               import json
-              conn = psycopg2.connect(
-                  dbname="yourdatabase",
-                  user="youruser",
-                  password="yourpassword",
-                  host="your-postgres-service"
+              import subprocess
+  
+              # Get Azure AD token for PostgreSQL
+              result = subprocess.run(
+                  ["az", "account", "get-access-token", "--resource", "https://ossrdbms-aad.database.windows.net", "--query", "accessToken", "--output", "tsv"],
+                  capture_output=True, text=True
               )
+              access_token = result.stdout.strip()
+  
+              # Connect to PostgreSQL using the access token
+              conn = psycopg2.connect(
+                  dbname=os.getenv("POSTGRES_DB"),
+                  user="aks_etl_user",
+                  password=access_token,
+                  host=os.getenv("POSTGRES_HOST"),
+                  sslmode="require"
+              )
+  
               cursor = conn.cursor()
+  
+              # Load data from transformed.json
               with open('/mnt/data/transformed.json') as f:
                   data = json.load(f)
+  
               for item in data:
                   cursor.execute("INSERT INTO your_table (id, value) VALUES (%s, %s)", (item["id"], item["value"]))
+  
               conn.commit()
               cursor.close()
               conn.close()
+  
