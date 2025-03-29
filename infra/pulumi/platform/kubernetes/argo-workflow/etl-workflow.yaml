@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: etl-cron-workflow
+  namespace: argo
+spec:
+  schedule: "0 13 * * *"  # Runs every day at 13:00 UTC
+  concurrencyPolicy: "Replace"  # Ensures only one job runs at a time
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 60  # Ensures the job starts within 60 sec if missed
+  workflowSpec:
+    entrypoint: etl-pipeline
+    templates:
+      - name: etl-pipeline
+        steps:
+          - - name: extract
+              template: extract-step
+          - - name: transform
+              template: transform-step
+          - - name: load
+              template: load-step
+
+      - name: extract-step
+        container:
+          image: python:3.9
+          command: [python, -c]
+          args:
+            - |
+              import requests
+              import json
+              response = requests.get('https://api.example.com/data')
+              with open('/mnt/data/extracted.json', 'w') as f:
+                  json.dump(response.json(), f)
+
+      - name: transform-step
+        container:
+          image: python:3.9
+          command: [python, -c]
+          args:
+            - |
+              import json
+              with open('/mnt/data/extracted.json') as f:
+                  data = json.load(f)
+              transformed = [{"id": d["id"], "value": d["value"] * 2} for d in data]
+              with open('/mnt/data/transformed.json', 'w') as f:
+                  json.dump(transformed, f)
+
+      - name: load-step
+        container:
+          image: python:3.9
+          env:
+            - name: POSTGRES_HOST
+              value: "your-postgres-service"
+            - name: POSTGRES_USER
+              value: "youruser"
+            - name: POSTGRES_PASSWORD
+              value: "yourpassword"
+            - name: POSTGRES_DB
+              value: "yourdatabase"
+          command: [python, -c]
+          args:
+            - |
+              import psycopg2
+              import json
+              conn = psycopg2.connect(
+                  dbname="yourdatabase",
+                  user="youruser",
+                  password="yourpassword",
+                  host="your-postgres-service"
+              )
+              cursor = conn.cursor()
+              with open('/mnt/data/transformed.json') as f:
+                  data = json.load(f)
+              for item in data:
+                  cursor.execute("INSERT INTO your_table (id, value) VALUES (%s, %s)", (item["id"], item["value"]))
+              conn.commit()
+              cursor.close()
+              conn.close()

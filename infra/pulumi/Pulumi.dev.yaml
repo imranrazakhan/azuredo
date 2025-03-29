@@ -10,4 +10,4 @@ config:
       environment: dev
       project: Pulumi AKS
     vm_size: Standard_F4s_v2
-    subscription_id: xxx4eede-xxxx-4d5c-86b4-xxxx
+    subscription_id: 3344eede-ba3a-4d5c-86b4-98cf0e4454f0

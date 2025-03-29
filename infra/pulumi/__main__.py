@@ -2,6 +2,7 @@ import pulumi
 from pulumi_azure_native import resources, containerregistry, authorization, containerservice
 from infra.aks import AKSCluster
 from pulumi_kubernetes import Provider, helm
+import pulumi_kubernetes as k8s
 from pulumi_kubernetes.core.v1 import Namespace, Secret
 #import pulumi_kubernetes.helm.v3 as helm
 import os
@@ -75,7 +76,7 @@ creds = containerservice.list_managed_cluster_user_credentials_output(
 
 
 # Configure Kubernetes Provider using the AKS Kubeconfig
-k8s_provider = Provider(
+k8s_provider = k8s.Provider(
     "k8s-provider",
     kubeconfig=creds.kubeconfigs[0].value.apply(lambda enc: base64.b64decode(enc).decode()),
 )
@@ -139,6 +140,115 @@ strimzi_cluster_operator_helm = helm.v3.Release(
         value_yaml_files=[pulumi.FileAsset("./kafka_strimzi_values.yaml")],
     ),
     opts=pulumi.ResourceOptions(provider=k8s_provider),
+)
+
+# Deploy Kafka Strimzi using Helm with the kafka_Strimzi_values.yaml file
+kafka_argocd_apps = helm.v3.Release(
+    "kafka-argocd-apps",
+    helm.v3.ReleaseArgs(
+        name="kafka-app",
+        chart="argocd-apps",
+        version="2.0.2",
+        repository_opts=helm.v3.RepositoryOptsArgs(
+            repo="https://argoproj.github.io/argo-helm",
+        ),
+        namespace="argocd",
+        value_yaml_files=[pulumi.FileAsset("./kafka-argocd-app.yaml")],
+    ),
+    opts=pulumi.ResourceOptions(
+        provider=k8s_provider,
+        depends_on=[argocd_helm]
+    ),
+)
+
+# Deploy KEDA using Helm with the kafka_Strimzi_values.yaml file
+keda_helm = helm.v3.Release(
+    "keda-helm",
+    helm.v3.ReleaseArgs(
+        chart="keda",
+        version="2.16.1",
+        repository_opts=helm.v3.RepositoryOptsArgs(
+            repo="https://kedacore.github.io/charts",
+        ),
+        namespace="keda",
+        create_namespace=True,
+        values={
+            "watchNamespace": "",  # Watch all namespaces
+            "image": {
+                "tag": "2.16.1"  # Ensure compatibility
+            }
+        }
+    ),
+    opts=pulumi.ResourceOptions(provider=k8s_provider),
+)
+
+# Deploy a Kafka ScaledObject for KEDA autoscaling
+kafka_scaled_object = k8s.apiextensions.CustomResource(
+    "kafka-scaledobject",
+    api_version="keda.sh/v1alpha1",
+    kind="ScaledObject",
+    metadata={
+        "name": "kafka-scaledobject",
+        "namespace": "keda",
+    },
+    spec={
+        "scaleTargetRef": {
+            "name": "my-kafka-consumer",
+        },
+        "minReplicaCount": 1,
+        "maxReplicaCount": 10,
+        "pollingInterval": 5,  # Poll Kafka every 5 seconds
+        "cooldownPeriod": 30,  # Scale down after 30 seconds of inactivity
+        "triggers": [
+            {
+                "type": "kafka",
+                "metadata": {
+                    "bootstrapServers": "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092",  # Update with your Kafka service
+                    "consumerGroup": "my-consumer-group",  # Replace with your consumer group
+                    "topic": "my-topic",  # Replace with the Kafka topic name
+                    "lagThreshold": "5",  # Scale when lag > 5 messages
+                }
+            }
+        ]
+    },
+    opts=pulumi.ResourceOptions(depends_on=[keda_helm])
+)
+
+
+kubeflow_helm = k8s.helm.v3.Chart(
+    "kubeflow",
+    k8s.helm.v3.ChartOpts(
+        chart="kubeflow",
+        namespace="kubeflow",
+        fetch_opts=k8s.helm.v3.FetchOpts(
+            repo="https://charts.kubeflow.org"
+        ),
+    )
+)
+
+# Argo Workflows installation using Helm
+argo_chart = k8s.helm.v3.Chart("argo-workflows",
+    k8s.helm.v3.ChartOpts(
+        chart="argo-workflows",
+        version="0.32.3",  # Check for the latest version
+        fetch_opts=k8s.helm.v3.FetchOpts(
+            repo="https://argoproj.github.io/argo-helm"
+        ),
+        namespace="argo",
+        create_namespace=True,
+    )
+)
+
+# RBAC setup (optional, needed for workflow permissions)
+sa = k8s.core.v1.ServiceAccount("argo-sa",
+    metadata={
+        "name": "argo-sa",
+        "namespace": "argo"
+    })
+
+etl_workflow = k8s.core.v1.ConfigMap("etl-workflow",
+    metadata={"name": "etl-workflow", "namespace": "argo"},
+    data={"workflow.yaml": open("etl-workflow.yaml").read()}
 )
 
 

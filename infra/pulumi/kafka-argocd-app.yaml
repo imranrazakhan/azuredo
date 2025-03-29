@@ -1,0 +1,36 @@
+applications:
+  kafka-app:
+    namespace: argocd
+    additionalLabels: {}
+    additionalAnnotations: {}
+    finalizers:
+      #- resources-finalizer.argocd.argoproj.io
+    project: default
+    source:
+      repoURL: "https://github.com/imranrazakhan/DevOps-Challenge"
+      targetRevision: main
+      path: platform/kubernetes/kafka/helm
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: "https://kubernetes.default.svc"
+      namespace: kafka
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+    revisionHistoryLimit: null
+    ignoreDifferences:
+      - group: kafka.strimzi.io
+        kind: Kafka
+        jsonPointers:
+          - /spec/kafka/replicas
+          - /spec/zookeeper/replicas
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+          - /spec/replicas
+    info:
+      - name: url
+        value: https://strimzi.io/

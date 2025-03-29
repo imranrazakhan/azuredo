@@ -1,0 +1,14 @@
+kafka:
+  name: doc-kafka
+  namespace: kafka
+  clusterId: "1234567890abcdef"
+  replicas: 3
+  storageSize: 100Gi
+  autoCreateTopics: true
+
+  topic:
+    name: posts
+    partitions: 3
+    replicas: 3
+    retentionMs: 604800000  # 7 days
+    segmentBytes: 1073741824  # 1 GB
